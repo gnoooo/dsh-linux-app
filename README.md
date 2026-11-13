@@ -311,6 +311,24 @@ fresh token. The backend log is at `~/.local/state/dsh-desktop/dsh-web.log`.
 
 ## Development
 
+`./manage.sh` is the project manager (same command set as the Packrat project):
+
+```sh
+./manage.sh help       # info, bump, check, test, build, clean, codes
+./manage.sh info       # version, runtime (GTK/WebKit/dsh), lock, git state
+./manage.sh check      # versions, uv.lock, packaging/arch, compileall, shell syntax
+./manage.sh test       # unittest suite
+./manage.sh bump patch # pyproject + uv.lock + PKGBUILD + .SRCINFO, atomically
+./manage.sh clean all  # caches, dist, makepkg artifacts (--dry-run first)
+```
+
+`bump` keeps the four version sources in step — `pyproject.toml`, `uv.lock`,
+`packaging/arch/PKGBUILD` and `packaging/arch/.SRCINFO` — and restores all of
+them if any step fails. `check` fails when they disagree, so a release cannot
+ship a package whose `pkgver` is stale.
+
+Without the script:
+
 ```sh
 uv venv --system-site-packages      # once; PyGObject lives in system Python
 uv pip install -e .
@@ -320,15 +338,18 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
 ```
+manage.sh       project manager (info, bump, check, test, build, clean)
 src/dsh_desktop/
-  cli.py      argument parsing, --check diagnostics
-  app.py      Gtk.Application, single instance, signal handling
-  window.py   window, WebKit view, loading/error views, shortcuts
-  server.py   launcher resolution + backend supervision (GTK-free)
-  config.py   config.toml + environment overrides
-  paths.py    XDG directories
-tests/        headless tests for the GTK-free parts
-dev/          git hooks and release-version checks
+  cli.py        argument parsing, --check diagnostics, pass-through to dsh web
+  app.py        Gtk.Application, single instance, signal handling
+  window.py     window, WebKit view, loading/error views, shortcuts
+  server.py     launcher resolution + backend supervision (GTK-free)
+  config.py     config.toml + environment overrides
+  distro.py     distribution detection and package hints
+  paths.py      XDG directories
+tests/          headless tests for the GTK-free parts
+dev/            git hooks and release-version checks
+packaging/arch/ PKGBUILD and .SRCINFO
 ```
 
 ## License
