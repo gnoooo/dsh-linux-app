@@ -3,15 +3,12 @@
 
 from __future__ import annotations
 
-import os
 import pathlib
 import re
 import sys
 import tomllib
 
-ROOT = pathlib.Path(
-    os.environ.get("PACKRAT_ROOT", pathlib.Path(__file__).resolve().parents[1])
-).resolve()
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 def fail(message: str) -> None:
@@ -19,21 +16,22 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
-def read_project_version() -> str:
+def read_project() -> tuple[str, str]:
     with (ROOT / "pyproject.toml").open("rb") as handle:
-        return str(tomllib.load(handle)["project"]["version"])
+        project = tomllib.load(handle)["project"]
+    return str(project["name"]), str(project["version"])
 
 
-def read_lock_version() -> str:
+def read_lock_version(name: str) -> str:
     lock = ROOT / "uv.lock"
     if not lock.exists():
         fail("uv.lock is missing")
     with lock.open("rb") as handle:
         data = tomllib.load(handle)
     for package in data.get("package", []):
-        if package.get("name") == "packrat":
+        if package.get("name") == name:
             return str(package.get("version", ""))
-    fail("uv.lock has no packrat package")
+    fail(f"uv.lock has no {name} package")
     return ""
 
 
@@ -52,15 +50,15 @@ def check_tag(tag: str, base: str) -> None:
 
 
 def main(argv: list[str]) -> int:
-    base = read_project_version()
-    locked = read_lock_version()
+    name, base = read_project()
+    locked = read_lock_version(name)
     if base != locked:
-        fail(f"pyproject version {base!r} != uv.lock packrat {locked!r}")
+        fail(f"pyproject version {base!r} != uv.lock {name} {locked!r}")
     if len(argv) > 1:
         fail("usage: check_version.py [TAG]")
     if len(argv) == 1:
         check_tag(argv[0], base)
-    print(f"release-check: {base} is consistent")
+    print(f"release-check: {name} {base} is consistent")
     return 0
 
 

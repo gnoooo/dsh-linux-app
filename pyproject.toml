@@ -1,0 +1,34 @@
+[project]
+name = "dsh-desktop"
+version = "0.1.0"
+description = "Lightweight native Linux desktop window for the DeepSeek Harness web GUI"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+keywords = ["deepseek", "dsh", "harness", "gtk", "webkitgtk", "desktop", "linux"]
+classifiers = [
+  "Environment :: X11 Applications :: GTK",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Software Development :: User Interfaces",
+]
+# No runtime dependencies on purpose: the only library needed is PyGObject,
+# which is a system package (python3-gobject) rather than something pip builds.
+# See README.md "Dependencies".
+dependencies = []
+
+[project.scripts]
+dsh-desktop = "dsh_desktop.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/deepseek-ai/deepseek-harness"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dsh_desktop"]

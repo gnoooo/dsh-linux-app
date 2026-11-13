@@ -1,0 +1,18 @@
+# Environments and build output
+.venv/
+.uv-cache/
+.scratch/
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.py[cod]
+
+# Local run artifacts
+*.log
+
+# makepkg artifacts (packaging/arch)
+packaging/arch/src/
+packaging/arch/pkg/
+packaging/arch/*.pkg.tar.*
+packaging/arch/*.tar.gz

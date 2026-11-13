@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=DeepSeek Harness
+GenericName=AI Coding Agent
+Comment=Run DeepSeek Harness in a native desktop window
+Exec=@EXEC@
+Icon=@ICON@
+Terminal=false
+Categories=Development;
+Keywords=dsh;deepseek;harness;agent;ai;assistant;
+StartupNotify=true
+StartupWMClass=@WMCLASS@

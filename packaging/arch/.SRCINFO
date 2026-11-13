@@ -1,0 +1,20 @@
+pkgbase = dsh-desktop
+	pkgdesc = Lightweight native desktop window for the DeepSeek Harness web GUI
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/deepseek-ai/deepseek-harness
+	arch = any
+	license = MIT
+	makedepends = python-build
+	makedepends = python-installer
+	makedepends = python-hatchling
+	makedepends = python-wheel
+	depends = python
+	depends = python-gobject
+	depends = gtk3
+	depends = webkit2gtk-4.1
+	optdepends = nodejs: run the DeepSeek Harness backend (Node.js >= 24.9)
+	optdepends = npm: install dsh with npm, or let the app fall back to npx
+	optdepends = xdg-utils: open links from the GUI in your default browser
+
+pkgname = dsh-desktop

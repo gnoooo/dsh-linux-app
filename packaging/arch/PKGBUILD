@@ -1,0 +1,60 @@
+# Maintainer: dsh-desktop contributors
+# Build from a checkout of this repository:
+#
+#     git clone <repo> dsh-linux-app && cd dsh-linux-app/packaging/arch
+#     makepkg -si
+#
+# This packages the working tree the PKGBUILD lives in, so there is no source
+# tarball to fetch or checksum while the project is unpublished. Replace
+# `source`/`sha256sums` with a release tarball before submitting to the AUR.
+pkgname=dsh-desktop
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Lightweight native desktop window for the DeepSeek Harness web GUI"
+arch=(any)
+url="https://github.com/deepseek-ai/deepseek-harness"
+license=(MIT)
+depends=(
+  'python'
+  'python-gobject'
+  'gtk3'
+  'webkit2gtk-4.1'
+)
+makedepends=(
+  'python-build'
+  'python-installer'
+  'python-hatchling'
+  'python-wheel'
+)
+optdepends=(
+  'nodejs: run the DeepSeek Harness backend (Node.js >= 24.9)'
+  'npm: install dsh with npm, or let the app fall back to npx'
+  'xdg-utils: open links from the GUI in your default browser'
+)
+source=()
+sha256sums=()
+
+_srcroot="$startdir/../.."
+
+build() {
+  cd "$_srcroot"
+  python -m build --wheel --no-isolation --outdir "$srcdir/dist"
+}
+
+package() {
+  python -m installer --destdir="$pkgdir" "$srcdir"/dist/*.whl
+
+  install -Dm644 "$_srcroot/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  install -Dm644 "$_srcroot/src/dsh_desktop/icon.svg" \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/org.deepseek.DshDesktop.svg"
+
+  install -d "$pkgdir/usr/share/applications"
+  sed -e 's|@EXEC@|/usr/bin/dsh-desktop|g' \
+      -e 's|@ICON@|org.deepseek.DshDesktop|g' \
+      -e 's|@WMCLASS@|org.deepseek.DshDesktop|g' \
+      "$_srcroot/assets/dsh-desktop.desktop.in" \
+      > "$pkgdir/usr/share/applications/org.deepseek.DshDesktop.desktop"
+  chmod 644 "$pkgdir/usr/share/applications/org.deepseek.DshDesktop.desktop"
+}
