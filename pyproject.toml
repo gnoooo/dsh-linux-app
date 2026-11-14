@@ -3,6 +3,7 @@ name = "dsh-desktop"
 version = "0.1.0"
 description = "Lightweight native Linux desktop window for the DeepSeek Harness web GUI"
 readme = "README.md"
+authors = [{ name = "gnoooo", email = "legnokki@gmail.com" }]
 requires-python = ">=3.11"
 license = { text = "MIT" }
 keywords = ["deepseek", "dsh", "harness", "gtk", "webkitgtk", "desktop", "linux"]
@@ -24,7 +25,10 @@ dependencies = []
 dsh-desktop = "dsh_desktop.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/deepseek-ai/deepseek-harness"
+Homepage = "https://github.com/gnoooo/dsh-linux-app"
+Repository = "https://github.com/gnoooo/dsh-linux-app"
+Issues = "https://github.com/gnoooo/dsh-linux-app/issues"
+Changelog = "https://github.com/gnoooo/dsh-linux-app/blob/master/CHANGELOG.md"
 
 [build-system]
 requires = ["hatchling"]

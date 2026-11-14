@@ -14,7 +14,7 @@ fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-python - "$VERSION" <<'PY'
+python3 - "$VERSION" <<'PY'
 import pathlib
 import re
 import sys

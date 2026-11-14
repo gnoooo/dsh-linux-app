@@ -5,14 +5,14 @@
 #     makepkg -si
 #
 # This packages the working tree the PKGBUILD lives in, so there is no source
-# tarball to fetch or checksum while the project is unpublished. Replace
-# `source`/`sha256sums` with a release tarball before submitting to the AUR.
+# tarball to fetch or checksum. Replace `source`/`sha256sums` with a release
+# tarball before submitting to the AUR.
 pkgname=dsh-desktop
 pkgver=0.1.0
 pkgrel=1
 pkgdesc="Lightweight native desktop window for the DeepSeek Harness web GUI"
 arch=(any)
-url="https://github.com/deepseek-ai/deepseek-harness"
+url="https://github.com/gnoooo/dsh-linux-app"
 license=(MIT)
 depends=(
   'python'
