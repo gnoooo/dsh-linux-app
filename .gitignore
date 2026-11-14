@@ -11,6 +11,13 @@ __pycache__/
 # Local run artifacts
 *.log
 
+# Test and analysis tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
 # makepkg artifacts (packaging/arch)
 packaging/arch/src/
 packaging/arch/pkg/

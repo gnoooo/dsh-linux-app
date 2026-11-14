@@ -18,7 +18,7 @@ classifiers = [
 ]
 # No runtime dependencies on purpose: the only library needed is PyGObject,
 # which is a system package (python3-gobject) rather than something pip builds.
-# See README.md "Dependencies".
+# See README.md "Requirements".
 dependencies = []
 
 [project.scripts]

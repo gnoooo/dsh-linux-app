@@ -36,7 +36,7 @@ Compared with the alternatives:
 
 | Approach | Cost | Verdict |
 |---|---|---|
-| **GTK 3 + WebKitGTK** (this) | ~60 MB RSS, no bundled runtime | Uses the WebKitGTK the distribution already ships; starts instantly |
+| **GTK 3 + WebKitGTK** (this) | ~60 MB RSS (typical), no bundled runtime | Uses the WebKitGTK the distribution already ships; starts instantly |
 | Electron | ~200 MB per app, own Chromium | Contradicts "lightweight" |
 | Tauri (Rust) | ~5 MB binary | Fine, but a large build for a wrapper this thin |
 | `chromium --app=…` | ~0 | No native window control, needs Chromium installed |
@@ -153,8 +153,8 @@ This app is a separate process, not a library: a launcher starts it, and it runs
 `dsh web` itself. That makes three things flow naturally.
 
 - **Environment** is inherited, so a launcher sets `ROMEO_LLM_KEY`,
-  `OPENAI_BASE_URL`, `DSH_HOME`, … and the backend sees them. The overlay below
-  reads its key with `apiKeyEnv: ROMEO_LLM_KEY`, which works unchanged.
+  `OPENAI_BASE_URL`, `DSH_HOME`, … and the backend sees them. An overlay that
+  reads its key with `apiKeyEnv: ROMEO_LLM_KEY` works unchanged.
 - **Launcher flags** are passed through: anything this app does not recognise
   goes to `dsh web`, so `--patch overlay.yml` applies an extra overlay.
 - **Authentication stays internal.** The app consumes the tokenised URL that
@@ -181,14 +181,14 @@ Useful exit codes and checks for a launcher's own `--doctor`:
 
 | Exit | Meaning |
 |---|---|
-| `0` | ran and the window was closed normally |
-| `1` | no `dsh`/`npx` launcher found |
+| `0` | the GUI ran and the window was closed normally, or `--check` found nothing wrong |
+| `1` | `--check` found a missing requirement: bindings, launcher, supported Node.js, or workspace |
 | `2` | bad configuration or flags |
-| `3` | GTK 3 / WebKitGTK 4.1 bindings missing |
+| `3` | the GUI could not start because the GTK 3 / WebKitGTK 4.1 bindings are missing |
 
 `dsh-desktop --check` prints the launcher it would use, the Node version, the
-distro's install command when bindings are missing, and exits non-zero when
-something required is absent — a cheap preflight before starting a tunnel.
+distro's install command when bindings are missing, and exits `1` when a
+required piece is absent — a cheap preflight before starting a tunnel.
 
 ## How it starts DSH
 
@@ -197,22 +197,31 @@ The launcher is chosen in this order:
 1. `command` in `config.toml`, or `--dsh`
 2. `dsh` on `PATH`
 3. a Node version-manager install (`~/.nvm`, `fnm`, `volta`) or `~/.local/bin`
-4. `npx -y @deepseek-ai/dsh`
+4. a system-wide install (`/usr/local/bin/dsh`, `/usr/bin/dsh`)
+5. `npx -y @deepseek-ai/dsh`
 
-`--check` prints exactly what was picked:
+`--check` prints what it would use:
 
 ```sh
 $ dsh-desktop --check
 dsh-desktop 0.1.0
-python       3.14.8  (/usr/bin/python3)
+python       3.14.10  (/home/you/code/dsh-linux-app/.venv/bin/python)
+distro       Arch Linux
 gtk          3.24.52
 webkitgtk    2.54.2
-config       ~/.config/dsh-desktop/config.toml (absent)
+config       /home/you/.config/dsh-desktop/config.toml (absent)
+data         /home/you/.local/share/dsh-desktop
+cache        /home/you/.cache/dsh-desktop
+state        /home/you/.local/state/dsh-desktop
+log          /home/you/.local/state/dsh-desktop/dsh-web.log
 launcher     /home/you/.nvm/versions/node/v24.22.2/bin/dsh
 origin       PATH
+bin dir      /home/you/.nvm/versions/node/v24.22.2/bin
 node         v24.22.2
+dsh version  0.2.2-rc.3
 workspace    /home/you (ok)
 port         0 (OS-assigned)
+backend      auto-detect
 ```
 
 ### The Node.js trap this app works around
@@ -338,7 +347,7 @@ The project lives at
 ./manage.sh info       # version, runtime (GTK/WebKit/dsh), lock, git state
 ./manage.sh check      # versions, uv.lock, packaging/arch, compileall, shell syntax
 ./manage.sh test       # unittest suite
-./manage.sh bump patch # pyproject + uv.lock + PKGBUILD + .SRCINFO, atomically
+./manage.sh bump patch # pyproject + uv.lock + PKGBUILD + .SRCINFO, with rollback
 ./manage.sh clean all  # caches, dist, makepkg artifacts (--dry-run first)
 ```
 

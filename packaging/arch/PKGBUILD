@@ -38,11 +38,11 @@ _srcroot="$startdir/../.."
 
 build() {
   cd "$_srcroot"
-  python -m build --wheel --no-isolation --outdir "$srcdir/dist"
+  python3 -m build --wheel --no-isolation --outdir "$srcdir/dist"
 }
 
 package() {
-  python -m installer --destdir="$pkgdir" "$srcdir"/dist/*.whl
+  python3 -m installer --destdir="$pkgdir" "$srcdir"/dist/*.whl
 
   install -Dm644 "$_srcroot/LICENSE" \
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE"

@@ -164,12 +164,21 @@ def _diagnostics(settings: Settings) -> int:
     backend_env = dict(os.environ)
     backend_env["PATH"] = child_path(command, backend_env)
     node = probe_node_version(backend_env)
-    print(f"node         {node or 'NOT FOUND on the backend PATH'}")
-    if not node_satisfies(node):
+    if node is None:
+        print("node         NOT FOUND on the backend PATH")
         print(
             "             WARNING: DeepSeek Harness requires Node.js "
             f">= {MIN_NODE[0]}.{MIN_NODE[1]}.0"
         )
+        status = 1
+    else:
+        print(f"node         {node}")
+        if not node_satisfies(node):
+            print(
+                "             WARNING: DeepSeek Harness requires Node.js "
+                f">= {MIN_NODE[0]}.{MIN_NODE[1]}.0"
+            )
+            status = 1
 
     if command.origin == "npx":
         print("dsh version  skipped (npx would download the package)")
@@ -188,7 +197,10 @@ def _diagnostics(settings: Settings) -> int:
             print(f"dsh version  could not determine: {exc}")
 
     workspace = settings.workspace or Path.home()
-    print(f"workspace    {workspace} ({'ok' if workspace.is_dir() else 'MISSING'})")
+    workspace_ok = workspace.is_dir()
+    print(f"workspace    {workspace} ({'ok' if workspace_ok else 'MISSING'})")
+    if not workspace_ok:
+        status = 1
     print(f"port         {settings.port}{' (OS-assigned)' if settings.port == 0 else ''}")
     print(f"backend      {settings.launch_argv or 'auto-detect'}")
     return status

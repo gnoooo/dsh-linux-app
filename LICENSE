@@ -23,5 +23,6 @@ SOFTWARE.
 ---
 
 The application icon (src/dsh_desktop/icon.svg) is derived from the DeepSeek
-Harness favicon, which is distributed under the MIT License as part of
-DeepSeek Harness (https://github.com/deepseek-ai/deepseek-harness).
+Harness favicon, Copyright (c) 2026 DeepSeek, distributed under the MIT License
+as part of DeepSeek Harness (https://github.com/deepseek-ai/deepseek-harness).
+The MIT permission notice above applies to the icon as well.

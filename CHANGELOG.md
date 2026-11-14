@@ -48,6 +48,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test isolation for system-wide `dsh` installs: tests can disable the
   conventional `/usr/local/bin` and `/usr/bin` candidate paths, so a host
   `dsh` no longer changes launcher-resolution results.
+- `--check` now exits `1` when Node.js is absent or older than 24.9, or when the
+  configured workspace directory does not exist, matching its documented role
+  as a preflight check.
+- The Arch PKGBUILD invokes `python3`, so a stray `python` earlier on `PATH`
+  cannot break `makepkg`.
 
 [Unreleased]: https://github.com/gnoooo/dsh-linux-app/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/gnoooo/dsh-linux-app/releases/tag/v0.1.0
