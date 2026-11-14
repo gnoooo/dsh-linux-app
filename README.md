@@ -1,5 +1,9 @@
 # dsh-desktop
 
+[![CI](https://github.com/gnoooo/dsh-linux-app/actions/workflows/ci.yml/badge.svg)](https://github.com/gnoooo/dsh-linux-app/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/gnoooo/dsh-linux-app)](https://github.com/gnoooo/dsh-linux-app/releases/latest)
+
 A small Linux desktop window for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness).
 
 `dsh web` already serves a complete GUI — it just happens to live in a browser tab.
@@ -66,7 +70,7 @@ What has actually been exercised:
 | Platform | Verified |
 |---|---|
 | Fedora 43, KDE/Wayland | full GUI against a live `dsh web`, installer, `.desktop` entry |
-| Arch Linux (rolling, Python 3.14) | package names, `install.sh`, 67 tests, `makepkg` build, installed `/usr/bin/dsh-desktop` |
+| Arch Linux (rolling, Python 3.14) | package names, `install.sh`, the full unittest suite, `makepkg` build, installed `/usr/bin/dsh-desktop` |
 
 Arch ships the same WebKitGTK 2.54 series that the GUI was verified against on
 Fedora; the containerised Arch run could not open a window (no X authorisation
@@ -77,7 +81,7 @@ inside the container), so the Arch GUI was not re-rendered there.
 ### Any distribution (per-user install)
 
 ```sh
-git clone <this repo> && cd dsh-linux-app
+git clone https://github.com/gnoooo/dsh-linux-app && cd dsh-linux-app
 ./scripts/install.sh
 ```
 
@@ -126,9 +130,22 @@ makepkg -si
 `/usr/bin/dsh-desktop` then runs on the system Python. It is the same code as
 the per-user install; only the interpreter and install prefix differ.
 
-`.SRCINFO` is checked in next to the PKGBUILD, so the directory can be pushed to
-the AUR as-is. The PKGBUILD packages the working tree it lives in; switch it to
-a release tarball (`source=`, `sha256sums=`) once the project is published.
+The PKGBUILD builds from the checkout it lives in and is not AUR-ready as-is.
+Before submitting it, switch the PKGBUILD to a release tarball (`source=`,
+`sha256sums=`) and regenerate `.SRCINFO` so the package builds from a tagged
+release rather than a local working tree.
+
+## Releases
+
+Tagged versions are published on the
+[GitHub releases page](https://github.com/gnoooo/dsh-linux-app/releases). The
+checkout works at any tag, so a specific release can be installed with:
+
+```sh
+git clone https://github.com/gnoooo/dsh-linux-app && cd dsh-linux-app
+git checkout v0.1.0
+./scripts/install.sh
+```
 
 ## Embedding (dsh-romeo and similar launchers)
 
@@ -191,7 +208,7 @@ python       3.14.8  (/usr/bin/python3)
 gtk          3.24.52
 webkitgtk    2.54.2
 config       ~/.config/dsh-desktop/config.toml (absent)
-launcher     /home/you/.nvm/versions/node/v20.20.2/bin/dsh
+launcher     /home/you/.nvm/versions/node/v24.22.2/bin/dsh
 origin       PATH
 node         v24.22.2
 workspace    /home/you (ok)
@@ -311,6 +328,9 @@ fresh token. The backend log is at `~/.local/state/dsh-desktop/dsh-web.log`.
 
 ## Development
 
+The project lives at
+[github.com/gnoooo/dsh-linux-app](https://github.com/gnoooo/dsh-linux-app).
+
 `./manage.sh` is the project manager (same command set as the Packrat project):
 
 ```sh
@@ -351,6 +371,14 @@ tests/          headless tests for the GTK-free parts
 dev/            git hooks and release-version checks
 packaging/arch/ PKGBUILD and .SRCINFO
 ```
+
+## Continuous integration
+
+GitHub Actions runs the headless unittest suite and the `manage.sh` checks on
+every push to `master`, every pull request, and on manual dispatch. The workflow
+runs `uv lock --check`, the suite on Python 3.11 and 3.13, and
+`./manage.sh check`; a separate job builds the sdist and wheel and uploads them
+as artifacts. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ## License
 

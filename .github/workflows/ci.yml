@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: "tests (Python ${{ matrix.python-version }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: "Set up Python ${{ matrix.python-version }}"
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+
+      - name: Check uv.lock
+        run: uv lock --check
+
+      - name: Run headless test suite
+        run: PYTHONPATH=src python -m unittest discover -s tests -v
+
+      - name: Run manage.sh checks
+        run: NO_COLOR=1 ./manage.sh check
+
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - name: List distributions
+        run: ls -lh dist
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@v7
+        with:
+          name: wheel
+          path: dist/*.whl
+          if-no-files-found: error
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@v7
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
