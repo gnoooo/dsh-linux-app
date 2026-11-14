@@ -56,7 +56,7 @@ class CandidatePathTests(unittest.TestCase):
             home = Path(tmp)
             old = _write_exe(home / ".nvm/versions/node/v18.2.0/bin/dsh")
             new = _write_exe(home / ".nvm/versions/node/v22.11.0/bin/dsh")
-            found = candidate_paths(home)
+            found = candidate_paths(home, system_paths=())
             self.assertEqual(found[0], new.resolve())
             self.assertIn(old.resolve(), found)
 
@@ -67,11 +67,19 @@ class CandidatePathTests(unittest.TestCase):
             path.parent.mkdir(parents=True)
             path.write_text("not executable")
             path.chmod(0o644)
-            self.assertNotIn(path, candidate_paths(home))
+            self.assertNotIn(path, candidate_paths(home, system_paths=()))
 
     def test_missing_home_yields_no_candidates(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            self.assertEqual(candidate_paths(Path(tmp)), [])
+            self.assertEqual(candidate_paths(Path(tmp), system_paths=()), [])
+
+    def test_system_paths_are_injectable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+            home.mkdir()
+            system = _write_exe(Path(tmp) / "usr/bin/dsh")
+            self.assertEqual(candidate_paths(home, system_paths=(str(system),)), [system])
+            self.assertEqual(candidate_paths(home, system_paths=()), [])
 
 
 class ResolveCommandTests(unittest.TestCase):
@@ -109,14 +117,54 @@ class ResolveCommandTests(unittest.TestCase):
             command = resolve_command(
                 environ={"PATH": str(Path(tmp) / "bin")},
                 home=home,
+                system_paths=(),
             )
             self.assertEqual(command.argv, (str(on_path),))
             self.assertEqual(command.origin, "PATH")
 
+    def test_version_manager_install_is_selected_with_its_origin(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+            installed = _write_exe(home / ".nvm/versions/node/v24.9.0/bin/dsh")
+            command = resolve_command(
+                environ={"PATH": ""},
+                home=home,
+                system_paths=(),
+            )
+            self.assertEqual(command.argv, (str(installed),))
+            self.assertEqual(command.bin_dir, str(installed.parent))
+            self.assertEqual(command.origin, "version manager")
+
+    def test_system_dsh_is_selected_when_path_is_empty(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+            home.mkdir()
+            system = _write_exe(Path(tmp) / "usr/bin/dsh")
+            command = resolve_command(
+                environ={"PATH": ""},
+                home=home,
+                system_paths=(str(system),),
+            )
+            self.assertEqual(command.argv, (str(system),))
+            self.assertEqual(command.bin_dir, str(system.parent))
+            self.assertEqual(command.origin, "system")
+
+    def test_empty_system_paths_finds_no_system_launcher(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+            home.mkdir()
+            with self.assertRaises(LaunchError) as caught:
+                resolve_command(environ={"PATH": ""}, home=home, system_paths=())
+            self.assertIn("could not find the DeepSeek Harness CLI", str(caught.exception))
+
     def test_falls_back_to_npx(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             npx = _write_exe(Path(tmp) / "npx")
-            command = resolve_command(environ={"PATH": tmp}, home=Path(tmp) / "home")
+            command = resolve_command(
+                environ={"PATH": tmp},
+                home=Path(tmp) / "home",
+                system_paths=(),
+            )
             self.assertEqual(command.argv, (str(npx), "-y", "@deepseek-ai/dsh"))
             self.assertEqual(command.origin, "npx")
             self.assertEqual(command.bin_dir, str(npx.parent))
@@ -124,7 +172,7 @@ class ResolveCommandTests(unittest.TestCase):
     def test_raises_with_actionable_message_when_nothing_found(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(LaunchError) as caught:
-                resolve_command(environ={"PATH": ""}, home=Path(tmp))
+                resolve_command(environ={"PATH": ""}, home=Path(tmp), system_paths=())
             self.assertIn("npm install -g @deepseek-ai/dsh", str(caught.exception))
 
 
@@ -351,10 +399,6 @@ class LaunchCommandDescribeTests(unittest.TestCase):
         self.assertEqual(command.describe(), "npx -y @deepseek-ai/dsh")
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class SymlinkTests(unittest.TestCase):
     """A package manager installs ``bin/dsh`` as a symlink into node_modules.
 
@@ -369,7 +413,7 @@ class SymlinkTests(unittest.TestCase):
             shim = home / ".nvm/versions/node/v24.9.0/bin/dsh"
             shim.parent.mkdir(parents=True)
             shim.symlink_to(target)
-            self.assertEqual(candidate_paths(home), [shim])
+            self.assertEqual(candidate_paths(home, system_paths=()), [shim])
 
     def test_deduplicates_two_shims_for_one_target(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -381,4 +425,8 @@ class SymlinkTests(unittest.TestCase):
             second = home / ".local/bin/dsh"
             second.parent.mkdir(parents=True)
             second.symlink_to(target)
-            self.assertEqual(candidate_paths(home), [first])
+            self.assertEqual(candidate_paths(home, system_paths=()), [first])
+
+
+if __name__ == "__main__":
+    unittest.main()

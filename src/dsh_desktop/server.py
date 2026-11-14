@@ -110,13 +110,21 @@ def _dedupe_by_target(paths: list[Path]) -> list[Path]:
     return ordered
 
 
-def candidate_paths(home: Path | None = None) -> list[Path]:
-    """Return conventional ``dsh`` locations, newest Node installation first."""
+def candidate_paths(
+    home: Path | None = None,
+    *,
+    system_paths: Sequence[str] = _SYSTEM_PATHS,
+) -> list[Path]:
+    """Return conventional ``dsh`` locations, newest Node installation first.
+
+    ``system_paths`` is injectable so callers can decide whether conventional
+    system-wide locations are considered; it defaults to :data:`_SYSTEM_PATHS`.
+    """
     home = Path.home() if home is None else home
     found: list[Path] = []
     for pattern in _HOME_GLOBS:
         found.extend(home.glob(pattern))
-    found.extend(Path(raw) for raw in _SYSTEM_PATHS)
+    found.extend(Path(raw) for raw in system_paths)
     # De-duplicate by target but keep the discovered path: a package manager
     # usually installs `bin/dsh` as a symlink into node_modules, and running the
     # shim (rather than the file it points at) is what a normal launch does.
@@ -238,11 +246,15 @@ def resolve_command(
     *,
     environ: Mapping[str, str] | None = None,
     home: Path | None = None,
+    system_paths: Sequence[str] = _SYSTEM_PATHS,
 ) -> LaunchCommand:
     """Decide how to start DeepSeek Harness.
 
     Order: an explicitly configured command, ``dsh`` on ``PATH``, a
     version-manager install, a system location, then ``npx``.
+
+    ``system_paths`` is passed through to :func:`candidate_paths`; tests use an
+    empty sequence to ignore launchers installed on the host.
     """
     environ = os.environ if environ is None else environ
 
@@ -270,8 +282,12 @@ def resolve_command(
     if located is not None:
         return LaunchCommand((located,), str(Path(located).parent), "PATH")
 
-    for path in candidate_paths(home):
-        return LaunchCommand((str(path),), str(path.parent), "version manager")
+    candidates = candidate_paths(home, system_paths=system_paths)
+    if candidates:
+        selected = candidates[0]
+        system = {Path(raw) for raw in system_paths}
+        origin = "system" if selected in system else "version manager"
+        return LaunchCommand((str(selected),), str(selected.parent), origin)
 
     npx = _which("npx", environ)
     if npx is not None:
